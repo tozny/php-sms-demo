@@ -29,18 +29,9 @@
         <h1>Tozny SMS Verification</h1>
         <div>Use the Tozny out-of-band verification API to confirm ownership of a phone number</div>
 
-        <?php if ( isset( $_POST['otp'] ) ) : ?>
-            <p>Validated!</p>
-        <?php elseif ( isset( $_POST['destination'] ) ) : ?>
-            <form method="post">
-                <input type="number" name="otp" />
-                <input type="submit" value="Validate OTP" />
-            </form>
-        <?php else : ?>
-            <form method="post" action="/send">
-                <input type="tel" name="destination" />
-                <input type="submit" value="Send OTP" />
-            </form>
-        <?php endif; ?>
+        <form method="post" action="/validate">
+            <input type="number" name="otp" />
+            <input type="submit" value="Validate OTP" />
+        </form>
     </body>
 </html>
