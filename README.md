@@ -1,26 +1,15 @@
 # Tozny SMS-based Phone Verification Demo
 
-Use this skeleton application to quickly setup and start working on a new Slim Framework 3 application. This application uses the latest Slim 3 with the PHP-View template renderer. It also uses the Monolog logger.
+First, copy `.env.example` to `.env` and populate your Realm information.
 
-This skeleton application was built for Composer. This makes setting up a new Slim Framework application quick and easy.
+Then run `run.sh` at the command line to start the local server.
 
-## Install the Application
+Now visit http://localhost:8080 in a browser and go!
 
-Run this command from the directory in which you want to install your new Slim Framework application.
+## Workflow
 
-    php composer.phar create-project slim/slim-skeleton [my-app-name]
+The first screen requires a phone number. Submitting said phone number will dispatch a Tozny OTP via SMS to your device.
 
-Replace `[my-app-name]` with the desired directory name for your new application. You'll want to:
+The second screen requires the OTP you have received (and transparently tracks the OTP session - it will only be valid once and for the device you just attempted to validate).
 
-* Point your virtual host document root to your new application's `public/` directory.
-* Ensure `logs/` is web writeable.
-
-To run the application in development, you can also run this command. 
-
-	php composer.phar start
-
-Run this command to run the test suite
-
-	php composer.phar test
-
-That's it! Now go build something cool.
+The final screen (assuming the OTP validated) will display the raw signed_data/signature tuple returned from Tozny as well as the deserialized JSON that was bound to the OTP session.
