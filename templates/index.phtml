@@ -29,8 +29,14 @@
         <h1>Tozny SMS Verification</h1>
         <div>Use the Tozny out-of-band verification API to confirm ownership of a phone number</div>
 
+        <div id="errors">
+            <?php if ( isset( $error ) ) : ?>
+            <p><?php echo $error; ?></p>
+            <?php endif; ?>
+        </div>
+
         <form method="post" action="/send">
-            <input type="tel" name="destination" />
+            <input type="tel" name="destination" <?php if ( isset( $error ) ) echo 'aria-invalid'; ?> />
             <input type="submit" value="Send OTP" />
         </form>
     </body>
