@@ -4,13 +4,13 @@
 $container = $app->getContainer();
 
 // Set up environment
-$dotenv = new \Dotenv\Dotenv(__DIR__ . '/../data');
+$dotenv = new \Dotenv\Dotenv(__DIR__ . '/..');
 $dotenv->load();
 
 // Flat-file database
 $container['users'] = function ($c) {
-    return new Flintstone\Flintstone('users', array('dir' => __DIR__ . '/../'));
-}
+    return new Flintstone\Flintstone('users', array('dir' => __DIR__ . '/../data'));
+};
 
 // view renderer
 $container['renderer'] = function ($c) {
@@ -33,4 +33,14 @@ $container['tozny_realm'] = function ($c) {
 };
 $container['tozny_user'] = function($c) {
     return new Tozny_Remote_User_API(getenv('REALM_KEY_ID'), getenv('TOZNY_API'));
+};
+
+// Errors
+$container['errors'] = function ($c) {
+    return [
+        'emptydest'  => 'Please enter a valid phone number',
+        'emptyotp'   => 'Please enter the one-time password you received on your device',
+        'badsession' => 'There was an error completing your session. Please <a href="/">start over</a> and try again',
+        'nomatch'    => 'Please re-enter the same password to confirm'
+    ];
 };

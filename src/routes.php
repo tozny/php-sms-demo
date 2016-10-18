@@ -7,22 +7,29 @@ use \Slim\Http\Request;
 
 // Routes
 $app->get('/', function (Request $request, Response $response, $args) {
-    $error = $request->getQueryParam('error');
-    if ( 'emptydest' === $error ) {
-        $args['error'] = 'Please enter a valid phone number!';
+    $error = $request->getQueryParam( 'error' );
+    if ( ! empty( $this->errors[ $error ] ) ) {
+        $args[ 'error' ] = $this->errors[ $error ];
     }
 
     // Render index view
     return $this->renderer->render($response, 'index.phtml', $args);
 });
 
-$app->post('/send', function(Request $request, Response $response, $args) use ($app) {
-    $error = $request->getQueryParam('error');
-    if ( 'emptyotp' === $error ) {
-        $args['error'] = 'Please enter the OTP that you recieved on your device.';
+$app->get('/register', function(Request $request, Response $response, $args) {
+    $error = $request->getQueryParam( 'error' );
+    if ( ! empty( $this->errors[ $error ] ) ) {
+        $args[ 'error' ] = $this->errors[ $error ];
     }
-    if ( 'badsession' === $error ) {
-        $args['error'] = 'There was an error completing your session. Please <a href="/">start over</a> and try again.';
+
+    // Render registration view
+    return $this->renderer->render($response, 'register.phtml', $args);
+});
+
+$app->post('/confirm', function(Request $request, Response $response, $args) use ($app) {
+    $error = $request->getQueryParam( 'error' );
+    if ( ! empty( $this->errors[ $error ] ) ) {
+        $args[ 'error' ] = $this->errors[ $error ];
     }
 
     $destination = $request->getParam('destination');
@@ -37,10 +44,10 @@ $app->post('/send', function(Request $request, Response $response, $args) use ($
 
     $args['session'] = $sent['session_id'];
 
-    return $this->renderer->render($response, 'sent.phtml', $args);
+    return $this->renderer->render($response, 'confirm.phtml', $args);
 });
 
-$app->post('/validate', function(Request $request, Response $response, $args) {
+$app->post('/loggedin', function(Request $request, Response $response, $args) {
     $otp = $request->getParam('otp');
     if ( empty( $otp ) ) {
         return $response->withStatus(302)->withHeader('Location', '/send?error=emptyotp' );
@@ -61,5 +68,5 @@ $app->post('/validate', function(Request $request, Response $response, $args) {
 
     $args['data'] = json_decode( $decoded );
 
-    return $this->renderer->render($response, 'valid.phtml', $args);
+    return $this->renderer->render($response, 'loggedin.phtml', $args);
 });
