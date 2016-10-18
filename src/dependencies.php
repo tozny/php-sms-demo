@@ -4,8 +4,13 @@
 $container = $app->getContainer();
 
 // Set up environment
-$dotenv = new \Dotenv\Dotenv(__DIR__ . '/../');
+$dotenv = new \Dotenv\Dotenv(__DIR__ . '/../data');
 $dotenv->load();
+
+// Flat-file database
+$container['users'] = function ($c) {
+    return new Flintstone\Flintstone('users', array('dir' => __DIR__ . '/../'));
+}
 
 // view renderer
 $container['renderer'] = function ($c) {

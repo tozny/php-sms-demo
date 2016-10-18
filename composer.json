@@ -17,19 +17,10 @@
         "slim/php-view": "^2.0",
         "monolog/monolog": "^1.17",
         "tozny/sdk-php": "^1.4",
-        "vlucas/phpdotenv": "^2.4"
-    },
-    "require-dev": {
-        "phpunit/phpunit": ">=4.8 < 6.0"
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Tests\\": "tests/"
-        }
+        "vlucas/phpdotenv": "^2.4",
+        "fire015/flintstone": "^2.0"
     },
 	"scripts": {
-        "start": "php -S 0.0.0.0:8080 -t public public/index.php",
-        "test": "phpunit"
+        "start": "php -S 0.0.0.0:8080 -t public public/index.php"
 	}
-
 }

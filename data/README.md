@@ -1,0 +1,1 @@
+All user records will be written to flat-files in this directory.
