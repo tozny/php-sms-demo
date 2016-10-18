@@ -9,6 +9,10 @@ if (PHP_SAPI == 'cli-server') {
     }
 }
 
+/**
+ * Load in all autoloaded dependencies and also the Tozny API (which doesn't currently
+ * leverage Composer autoloading but is still referenced by Composer).
+ */
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/../vendor/tozny/sdk-php/ToznyRemoteRealmAPI.php';
 require __DIR__ . '/../vendor/tozny/sdk-php/ToznyRemoteUserAPI.php';
@@ -21,9 +25,6 @@ $app = new \Slim\App($settings);
 
 // Set up dependencies
 require __DIR__ . '/../src/dependencies.php';
-
-// Register middleware
-require __DIR__ . '/../src/middleware.php';
 
 // Register routes
 require __DIR__ . '/../src/routes.php';
