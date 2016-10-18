@@ -35,12 +35,27 @@ $container['tozny_user'] = function($c) {
     return new Tozny_Remote_User_API(getenv('REALM_KEY_ID'), getenv('TOZNY_API'));
 };
 
+// Password Hashing
+$container['passwordhasher'] = function ($c) {
+    return new \Hautelook\Phpass\PasswordHash(8,false);
+};
+
 // Errors
 $container['errors'] = function ($c) {
     return [
-        'emptydest'  => 'Please enter a valid phone number',
-        'emptyotp'   => 'Please enter the one-time password you received on your device',
-        'badsession' => 'There was an error completing your session. Please <a href="/">start over</a> and try again',
-        'nomatch'    => 'Please re-enter the same password to confirm'
+        'generic'      => 'Something went wrong ... please contact support',
+        'useduser'     => 'That username is already in use',
+        'emptydest'    => 'Please enter a valid phone number',
+        'emptyotp'     => 'Please enter the one-time password you received on your device',
+        'badsession'   => 'There was an error completing your session. Please <a href="/">start over</a> and try again',
+        'nomatch'      => 'Please re-enter the same password to confirm',
+        'invalidlogin' => 'Invalid login. Perhaps you need to <a href="/register">register</a> first.'
+    ];
+};
+
+// Messages
+$container['messages'] = function ($c) {
+    return [
+        'registered' => 'Your account is now registered!'
     ];
 };

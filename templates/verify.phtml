@@ -41,43 +41,21 @@
         </section>
 
         <section id="main">
-            <form method="post" action="/register">
+            <p>Please enter the one-time password you recieved via SMS to finish registration.</p>
+            <form method="post" action="/verify">
                 <table>
                     <tr>
                         <td>
-                            <label for="username">Username</label>
+                            <label for="otp">One-time Password</label>
                         </td>
                         <td>
-                            <input type="text" name="username" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <label for="phone">Phone Number</label>
-                        </td>
-                        <td>
-                            <input type="tel" name="phone" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <label for="password">Password</label>
-                        </td>
-                        <td>
-                            <input type="password" name="password" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <label for="password">Confirm Password</label>
-                        </td>
-                        <td>
-                            <input type="password" name="password_confirm" />
+                            <input type="text" name="otp" />
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2" style="text-align: center;">
-                            <input type="submit" value="Register" />
+                            <input type="hidden" name="session" value="<?php echo $session_id; ?>" />
+                            <input type="submit" value="Verify" />
                         </td>
                     </tr>
                 </table>
