@@ -11,9 +11,8 @@ use \Slim\Http\Request;
  *
  * If user authentication is successful, an authentication challenge will be created
  * with Tozny and the user will be redirected to the /confirm page where they must
- * input the OTP they have received. The session for the authentication challenge
- * will be passed with the redirect in a query parameter such that it's available for
- * completion.
+ * input the OTP they have received. The session for the challenge will be passed
+ * with the redirect in a query parameter such that it's available for completion.
  *
  * If authentication fails, the user is redirected back to the homepage and asked to
  * correct any errors.
@@ -53,15 +52,15 @@ $app->post('/', function (Request $request, Response $response, $args) {
         $user_data = json_decode( $user, true );
         if ($this->passwordhasher->checkPassword( $password, $user_data['password'] ) ) {
             $sent = $this->tozny_realm->realmOTPChallenge(
-                null,                // Optional presence token (unnecessary)
-                'sms-otp-6',         // OTP format (could also be "sms-otp-8")
-                $user_data['phone'], // Destination
-                null,                // Optional serialized data
-                'authenticate'       // Context
+                null,                                       // Optional presence token (unnecessary)
+                'sms-otp-6',                                // OTP format (could also be "sms-otp-8")
+                $user_data['phone'],                        // Destination
+                json_encode( [ 'username' => $username ] ), // Serialized data to be bound to the OTP session
+                'verify'                                    // Context
             );
 
             if ('ok' === $sent['return'] ) {
-                return $response->withRedirect('/confirm?session=' . $sent['session']);
+                return $response->withRedirect('/confirm?session=' . $sent['session_id']);
             }
         }
     }
@@ -71,7 +70,11 @@ $app->post('/', function (Request $request, Response $response, $args) {
 
 /**
  * The routes for the registration endpoint power both resenting the registration form
- * (GET) and creating a new account (POST)
+ * (GET) and creating a new account (POST).
+ *
+ * When registering, a user will be sent an OTP over SMS to verify ownership of their
+ * phone number. Unless they enter that OTP on the /verify screen, their account will
+ * be "unverified" and there is no guarantee they can log in.
  */
 $app->get('/register', function(Request $request, Response $response, $args) {
     $error = $request->getQueryParam( 'error' );
@@ -122,27 +125,6 @@ $app->post('/register', function(Request $request, Response $response, $args) {
     }
 
     return $response->withRedirect('/register?error=generic');
-});
-
-$app->post('/confirm', function(Request $request, Response $response, $args) use ($app) {
-    $error = $request->getQueryParam( 'error' );
-    if ( ! empty( $this->errors[ $error ] ) ) {
-        $args[ 'error' ] = $this->errors[ $error ];
-    }
-
-    $destination = $request->getParam('destination');
-    if ( empty( $destination ) ) {
-        return $response->withStatus(302)->withHeader('Location', '/?error=emptydest');
-    }
-    $sent = $this->tozny_realm->realmOTPChallenge( null, 'sms-otp-6', $destination, null, 'verify' );
-
-    if ( 'ok' !== $sent['return'] ) {
-        return $response->withRedirect('/');
-    }
-
-    $args['session'] = $sent['session_id'];
-
-    return $this->renderer->render($response, 'confirm.phtml', $args);
 });
 
 /**
@@ -201,7 +183,9 @@ $app->post( '/verify', function ( Request $request, Response $response, $args ) 
                     $user_data['verified'] = true;
                     $this->users->set( $username, json_encode( $user_data ) );
 
-                    return $response->withRedirect('/?message=registered');
+                    $_SESSION['username'] = $username;
+
+                    return $response->withRedirect('/loggedin');
                 }
             }
         }
@@ -210,26 +194,130 @@ $app->post( '/verify', function ( Request $request, Response $response, $args ) 
     return $response->withRedirect('/register?error=generic');
 } );
 
-$app->post('/loggedin', function(Request $request, Response $response, $args) {
-    $otp = $request->getParam('otp');
-    if ( empty( $otp ) ) {
-        return $response->withStatus(302)->withHeader('Location', '/send?error=emptyotp' );
+/**
+ * The routes for confirming an OTP are similar to /verify but will be verifying an OTP
+ * issued with a context of authenticate (meaning the OTP will be used to actually log the
+ * user in!
+ */
+$app->get('/confirm', function(Request $request, Response $response, $args) {
+    $session = $request->getQueryParam('session');
+    $args['session_id'] = $session;
+
+    $error = $request->getQueryParam( 'error' );
+    if ( ! empty( $this->errors[ $error ] ) ) {
+        $args[ 'error' ] = $this->errors[ $error ];
     }
-    $session = $request->getParam('session');
+
+    return $this->renderer->render($response, 'confirm.phtml', $args);
+});
+$app->post('/confirm', function(Request $request, Response $response, $args) {
+    $session = $request->getParam( 'session' );
+    $otp = $request->getParam( 'otp' );
+
     if ( empty( $session ) ) {
-        return $response->withStatus(302)->withHeader('Location', '/send?error=badsession' );
+        return $response->withRedirect( '/confirm?error=badsession' );
+    }
+
+    if ( empty( $otp ) ) {
+        return $response->withRedirect( '/confirm?error=emptyotp&session=' . $session );
     }
 
     $validated = $this->tozny_user->userOTPResult( $session, $otp );
 
-    $data = $validated['signed_data'];
+    /**
+     * Once the OTP is successfully validated, we have a signed_data blob from which we can
+     * extract the original username (this was populated in the `data` key when the OTP was
+     * originally created). This can be used to query the user DB to update the "verified"
+     * status of our user.
+     */
+    if ( isset( $validated['signed_data'] ) ) {
+        $data = $validated['signed_data'];
 
-    $args['signed_data'] = $data;
-    $args['signature'] = $validated['signature'];
+        $decoded = Tozny_Remote_Realm_API::base64UrlDecode($data);
+        $deserialized = json_decode( $decoded, true );
 
-    $decoded = Tozny_Remote_Realm_API::base64UrlDecode($data);
+        if ( isset( $deserialized['data'] ) ) {
+            $realm_data = json_decode( $deserialized[ 'data' ], true );
 
-    $args['data'] = json_decode( $decoded );
+            if ( isset( $realm_data['username'] ) ) {
+                $username = $realm_data['username'];
+
+                $user = $this->users->get( $username );
+
+                if ( $user ) {
+                    $user_data = json_decode( $user, true );
+                    $user_data['verified'] = true;
+                    $this->users->set( $username, json_encode( $user_data ) );
+
+                    $_SESSION['username'] = $username;
+
+                    return $response->withRedirect('/loggedin');
+                }
+            }
+        }
+    }
+
+    return $response->withRedirect('/login?error=generic');
+});
+
+/**
+ * Once the user has been logged in, they will have access to the central, authenticated
+ * page that presents their user information and the ability to update their password.
+ */
+$app->get('/loggedin', function(Request $request, Response $response, $args) {
+    if ( ! isset( $_SESSION['username'] ) || ! $this->users->get( $_SESSION['username'] ) ) {
+        return $response->withRedirect('/?error=notloggedin');
+    }
+
+    $error = $request->getQueryParam( 'error' );
+    if ( ! empty( $this->errors[ $error ] ) ) {
+        $args[ 'error' ] = $this->errors[ $error ];
+    }
+
+    $message = $request->getQueryParam( 'message' );
+    if ( ! empty( $this->messages[ $message ] ) ) {
+        $args[ 'message' ] = $this->messages[ $message ];
+    }
+
+    $user_data = $this->users->get( $_SESSION['username'] );
+    $user = json_decode( $user_data, true );
+
+    $args['username'] = $user['username'];
+    $args['phone'] = $user['phone'];
 
     return $this->renderer->render($response, 'loggedin.phtml', $args);
 });
+$app->post('/loggedin', function(Request $request, Response $response, $args) {
+    if ( ! isset( $_SESSION['username'] ) || ! $this->users->get( $_SESSION['username'] ) ) {
+        return $response->withRedirect('/?error=notloggedin');
+    }
+
+    $old_password = $request->getParam('password');
+    $new_password = $request->getParam('new_password');
+    $new_cpassword = $request->getParam('new_cpassword');
+
+    $user_data = $this->users->get( $_SESSION['username'] );
+    $user = json_decode( $user_data, true );
+
+    if (! hash_equals($new_password, $new_cpassword) ) {
+        return $response->withRedirect('/loggedin?error=nomatch');
+    }
+
+    if (! $this->passwordhasher->checkPassword( $old_password, $user['password'] ) ) {
+        return $response->withRedirect('/loggedin?error=badpassword');
+    }
+
+    $user['password'] = $this->passwordhasher->HashPassword( $new_password );
+    $this->users->set( $_SESSION['username'], json_encode( $user ) );
+
+    return $response->withRedirect('/loggedin?message=updated');
+});
+
+/**
+ * Logging out is a matter of clearing the PHP session and redirecting to the homepage.
+ */
+$app->get('/logout', function(Request $request, Response $response, $args) {
+    session_destroy();
+
+    return $response->withRedirect('/?loggedout');
+} );

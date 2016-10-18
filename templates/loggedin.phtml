@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>Slim 3</title>
+        <link href='//fonts.googleapis.com/css?family=Lato:300' rel='stylesheet' type='text/css'>
+        <style>
+            body {
+                margin: 50px 0 0 0;
+                padding: 0;
+                width: 100%;
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                text-align: center;
+                color: #aaa;
+                font-size: 18px;
+            }
+
+            h1 {
+                color: #719e40;
+                letter-spacing: -3px;
+                font-family: 'Lato', sans-serif;
+                font-size: 40px;
+                font-weight: 200;
+                margin-bottom: 20px;
+            }
+            table {
+                margin: auto;
+            }
+            table td {
+                text-align: left;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Tozny SMS Verification Demo</h1>
+
+        <section id="messages">
+            <?php if ( isset( $message ) ) : ?>
+                <p><?php echo $message; ?></p>
+            <?php endif; ?>
+        </section>
+
+        <section id="errors">
+            <?php if ( isset( $error ) ) : ?>
+            <p><?php echo $error; ?></p>
+            <?php endif; ?>
+        </section>
+
+        <section id="main">
+            <form method="post" action="/loggedin">
+            <table>
+                <tr>
+                    <td>
+                        <label for="username">Username</label>
+                    </td>
+                    <td>
+                        <input type="text" readonly name="username" value="<?php echo htmlspecialchars( $username ); ?>" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="phone">Phone</label>
+                    </td>
+                    <td>
+                        <input type="text" readonly name="phone" value="<?php echo htmlspecialchars( $phone ); ?>" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="password">Old Password</label>
+                    </td>
+                    <td>
+                        <input type="password" name="password" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="new_password">New Password</label>
+                    </td>
+                    <td>
+                        <input type="password" name="new_password" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="new_cpassword">Confirm New Password</label>
+                    </td>
+                    <td>
+                        <input type="password" name="new_cpassword" />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <input type="submit" value="Change Password" />
+                    </td>
+                </tr>
+            </table>
+            </form>
+            <a href="/logout">Logout</a>
+        </section>
+    </body>
+</html>

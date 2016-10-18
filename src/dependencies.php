@@ -48,14 +48,18 @@ $container['errors'] = function ($c) {
         'emptydest'    => 'Please enter a valid phone number',
         'emptyotp'     => 'Please enter the one-time password you received on your device',
         'badsession'   => 'There was an error completing your session. Please <a href="/">start over</a> and try again',
+        'badpassword'  => 'Your current password is invalid',
         'nomatch'      => 'Please re-enter the same password to confirm',
-        'invalidlogin' => 'Invalid login. Perhaps you need to <a href="/register">register</a> first.'
+        'invalidlogin' => 'Invalid login. Perhaps you need to <a href="/register">register</a> first.',
+        'notloggedin'  => 'You don\'t seem to be logged in'
     ];
 };
 
 // Messages
 $container['messages'] = function ($c) {
     return [
-        'registered' => 'Your account is now registered!'
+        'registered' => 'Your account is now registered!',
+        'updated'    => 'Your password has been updated',
+        'loggedout'  => 'You have been logged out'
     ];
 };
