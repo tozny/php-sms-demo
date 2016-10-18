@@ -8,8 +8,22 @@ Now visit http://localhost:8080 in a browser and go!
 
 ## Workflow
 
-The first screen requires a phone number. Submitting said phone number will dispatch a Tozny OTP via SMS to your device.
+### Login
 
-The second screen requires the OTP you have received (and transparently tracks the OTP session - it will only be valid once and for the device you just attempted to validate).
+The login screen takes a standard username/password pair. If both are valid, the user is automatically redirected to /verify to verify the OTP they received on their device.
 
-The final screen (assuming the OTP validated) will display the raw signed_data/signature tuple returned from Tozny as well as the deserialized JSON that was bound to the OTP session.
+If the username or password are incorrect, authentication is rejected. There is no indication of _which_ was incorrect, merely that the credentials were invalid.
+
+### Registration
+
+Users are required to provide a username, a phone number and a password when registering. They must enter the same password _twice_ to register. Once submitted, the app will trigger a Tozny OTP challenge to the user's phone and redirect to a /confirm page where the user can verify their OTP.
+
+Once the OTP is validated, the user is flagged as "verified" in the database and they are automatically logged in.
+
+### Phone Verification
+
+Once a user provides the OTP they were sent on their device, their account is considered "verified" and they are logged in. As a Tozny user is not required for this workflow, the app-local username is added to the OTP request initially and is used to populate the user session upon verification.
+
+### Secured Data
+
+Once logged in, the user can view their username and phone number, and can change thier password by entering their old password and a new password (twice).
