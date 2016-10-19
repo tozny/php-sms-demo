@@ -1,6 +1,6 @@
 # Tozny SMS-based Phone Verification Demo
 
-First, install dependencies via Composer with `composer install`.
+First, install dependencies via [Composer](https://getcomposer.org/) with `composer install`.
 
 Next, copy `.env.example` to `.env` and populate your Realm information.
 
