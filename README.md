@@ -1,6 +1,8 @@
 # Tozny SMS-based Phone Verification Demo
 
-First, copy `.env.example` to `.env` and populate your Realm information.
+First, install dependencies via Composer with `composer install`.
+
+Next, copy `.env.example` to `.env` and populate your Realm information.
 
 Then run `run.sh` at the command line to start the local server.
 
@@ -27,3 +29,9 @@ Once a user provides the OTP they were sent on their device, their account is co
 ### Secured Data
 
 Once logged in, the user can view their username and phone number, and can change thier password by entering their old password and a new password (twice).
+
+## System Requirements
+
+- PHP 7
+- Composer
+- [Tozny Realm Information](https://tozny.com/beta/)
